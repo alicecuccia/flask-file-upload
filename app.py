@@ -33,11 +33,16 @@ SCOPES = ['https://www.googleapis.com/auth/drive.file']
 
 # Carica le credenziali dalla variabile d'ambiente
 credentials_json = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
-if credentials_json:
-    creds = Credentials.from_service_account_info(json.loads(credentials_json), scopes=SCOPES)
-else:
-    raise EnvironmentError("Credenziali non trovate nella variabile d'ambiente!")
 
+if not credentials_json:
+    raise EnvironmentError("La variabile d'ambiente GOOGLE_APPLICATION_CREDENTIALS non è impostata!")
+
+try:
+    creds = Credentials.from_service_account_info(json.loads(credentials_json), scopes=SCOPES)
+except json.JSONDecodeError as e:
+    raise EnvironmentError(f"Errore nel parsing del JSON delle credenziali: {e}")
+
+# Inizializza il servizio Google Drive
 drive_service = build('drive', 'v3', credentials=creds)
 
 @app.route('/', methods=['GET', 'POST'])
